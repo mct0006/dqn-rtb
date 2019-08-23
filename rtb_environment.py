@@ -212,8 +212,8 @@ def get_data(camp_n):
     if type(camp_n) != str:
         train_file_dict = {}
         test_file_dict = {}
-	    role = get_execution_role()
         data_path = 'rl-test-bid-data'
+        role = get_execution_role()
 
         for camp in camp_n:
             test_data = pd.read_csv('s3://' + data_path + '/' + 'test.theta_' + camp + '.txt',
