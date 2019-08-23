@@ -5,6 +5,7 @@ import pandas as pd
 import pickle as pickle
 import matplotlib.pyplot as plt
 import boto3
+from io import BytesIO
 from sagemaker import get_execution_role
 
 class RTB_environment:
@@ -214,13 +215,17 @@ def get_data(camp_n):
         test_file_dict = {}
         data_path = 'rl-test-bid-data'
         role = get_execution_role()
+        s3 = boto3.resource('s3')
 
         for camp in camp_n:
             test_data = pd.read_csv('s3://' + data_path + '/' + 'test.theta_' + camp + '.txt',
                                      header=None, index_col=False, sep=' ',names=['click', 'winprice', 'pctr'])
             train_data = pd.read_csv('s3://' + data_path + '/' + 'train.theta_' + camp + '.txt',
                                      header=None, index_col=False, sep=' ', names=['click', 'winprice', 'pctr'])
-            camp_info = pickle.load(open('s3://' + data_path + '/' + 'info_' + camp + '.txt', "rb"))
+            with BytesIO() as data:
+                s3.Bucket(data_path).download_fileobj('info_' + camp + '.txt', data)
+                data.seek(0)
+                camp_info = pickle.load(data)
             test_budget = camp_info['cost_test']
             train_budget = camp_info['cost_train']
             test_imp = camp_info['imp_test']
@@ -237,7 +242,10 @@ def get_data(camp_n):
                                 header=None, index_col=False, sep=' ', names=['click', 'winprice', 'pctr'])
         train_data = pd.read_csv('s3://' + data_path + '/' + 'train.theta_' + camp + '.txt',
                                  header=None, index_col=False, sep=' ', names=['click', 'winprice', 'pctr'])
-        camp_info = pickle.load(open('s3://' + data_path + '/' + 'info_' + camp + '.txt', "rb"))
+        with BytesIO() as data:
+            s3.Bucket(data_path).download_fileobj('info_' + camp + '.txt', data)
+            data.seek(0)
+            camp_info = pickle.load(data)
         test_budget = camp_info['cost_test']
         train_budget = camp_info['cost_train']
         test_imp = camp_info['imp_test']
